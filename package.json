@@ -1,0 +1,29 @@
+{
+    "name"        : "brodb",
+    "version"     : "1.0.0",
+    "description" : "brogrammer db",
+    "author"      : "poofy leek <poofyleek@gmail.com>",
+    "dependencies": {
+        "redis-protocol": "*",
+        "mkdirp": "*",
+        "minimist" : "*",
+        "node-lmdb": "*",
+        "redis":   ">=0.8"
+    },
+    "devDependencies": {
+        "nodeunit": ">=0.6"
+    },
+    "main"        : "brodb.js",
+    "keywords"    : ["db"],
+    "repositories": [{
+        "type": "git",
+        "path": "git://github.com/poofyleek/brodb.git"
+    }],
+    "homepage"    : "http://github.com/poofyleek/brodb",
+    "bugs"        : "http://github.com/poofyleek/brodb/issues",
+    "licenses"    : [{ "type": "MIT"}],
+    "engine"      : "node",
+    "scripts"     : {
+        "test": "./node_modules/nodeunit/bin/nodeunit test/*"
+    }
+}
