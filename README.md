@@ -49,12 +49,12 @@ Test using redis-cli:
     (error) not found
     redis 127.0.0.1:2666> 
 
-or use client.js example to use node.js client api for redis:
+or use client.js example to use node.js client api for redis and extend it to use extra commands 'txn' and 'cs':
 
     node client.js 
     Reply: OK
     err null res lasdfadf
-
+    key a
 
 alternatively, to run a rest server:
 
