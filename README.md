@@ -8,6 +8,7 @@ http://www.urbandictionary.com/define.php?term=brodb
 * can store data to disk persistently with transaction unlike redis
 * data can grow beyond given RAM unlike redis
 * uses existing hiredis based protocol to be compatible with redis-cli and api bindings
+* rest api -- see app.js
 * allows creative customization in js on the server side to add new custom commands as needed
 * can be sharded, clustered and used with existing node.js 
 
