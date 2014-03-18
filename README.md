@@ -50,3 +50,16 @@ Test using redis-cli:
     redis 127.0.0.1:2666> 
 
 for more info read brodb.js
+
+
+to run a rest server:
+
+    node app.js
+
+and use curl to post rest request:
+
+    curl  -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{ "name": "db1", "path": "./dbdir", "port": 2666, "maxDbs" : 10, "mapSize" : 16777216, "dupSort": true, "create": true}' http://127.0.0.1:5000/initdb
+
+    curl  -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{ "key": "a"}' http://127.0.0.1:5000/get
+
+    curl  -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{ "name": "db1"}' http://127.0.0.1:5000/closedb
