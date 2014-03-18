@@ -1,7 +1,5 @@
-what the #*@$#% is this?
-==========
-
 BrODB
+=====
 
 http://www.urbandictionary.com/define.php?term=brodb
 
