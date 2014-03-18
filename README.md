@@ -3,6 +3,14 @@ BrODB
 
 http://www.urbandictionary.com/define.php?term=brodb
 
+* a simple kvstore db even a brogrammer can use it
+* uses LMDB which means it's fast, reliable and no BS like levelDB
+* can store data to disk persistently with transaction unlike redis
+* data can grow beyond given RAM unlike redis
+* uses existing hiredis based protocol to be compatible with redis-cli and api bindings
+* allows creative customization in js on the server side to add new custom commands as needed
+* can be sharded, clustered and used with existing node.js 
+
 to run it as a server:
 
     node brodb.js

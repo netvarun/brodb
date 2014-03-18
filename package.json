@@ -4,6 +4,8 @@
     "description" : "brogrammer db",
     "author"      : "poofy leek <poofyleek@gmail.com>",
     "dependencies": {
+        "express": "*",
+        "routes": "*",
         "redis-protocol": "*",
         "mkdirp": "*",
         "minimist" : "*",

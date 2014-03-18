@@ -7,49 +7,19 @@ var util = require('util');
 
 // use the wonderful lmdb 
 
-function lmdbCmd(dbi, env, encoder, cmd, args) {
-    var txn;
-    // strategy is to use 'string' for everything.
-    // that way JSON.stringify in/out of value for key
-    // and then use jsonpath or js to search & process
-    switch(cmd){
-        case 'set':
-            txn = env.beginTxn();
-            txn.putString(dbi, args[0], args[1]);
-            txn.commit();
-            encoder.singleline('OK');
-            break;
-        case 'get':
-            txn = env.beginTxn({readOnly: true});
-            var data = txn.getString(dbi,args[0]);
-            txn.commit();
-            if (data)
-                encoder.encode(data);
-            else
-                encoder.error('not found');
-            break;
-        case 'del':
-            txn = env.beginTxn();
-            txn.del(dbi, args[0]);
-            txn.commit();
-            encoder.singleline('OK deleted');
-            break;
-        default:
-            encoder.error("error, bad command");
-    }
-}
 
 var BroDB = function(conf) {
-    var env = new lmdb.Env();
     var encoder;
     var self = this;
-
+    self.env = new lmdb.Env();
+    self.conf = conf;
     mkdirp(conf.path, function(err) {
         if (!!err)
             console.log(err);
     });
-    env.open(conf);
-    var dbi = env.openDbi(conf);
+    self.env.open(conf);
+    console.log('conf',conf);
+    self.dbi = self.env.openDbi(conf);
     self.txn = null;
     self.cursor = null;
     var key;
@@ -63,114 +33,113 @@ var BroDB = function(conf) {
             return;
         }
         //console.log('>>>', command);
-        encoder = this;
+        self.encoder = this;
         switch(command[0]) {
             case 'quit':
-                encoder.singleline('OK bye');
-                dbi.close();
-                env.close();
+                self.encoder.singleline('OK bye');
+                self.close();
                 self.emit('quit', 'user requested quit');
                 break;
             case 'info':
-                encoder.encode(JSON.stringify(conf));
+                self.encoder.encode(JSON.stringify(conf));
                 break;
             case 'txn':         // custom command
             case 'transaction':
                 switch(command[1]) {
                     case 'begin':
                     case 'start':
-                        self.txn = env.beginTxn();
-                        encoder.singleline('OK');
+                        self.txn = self.env.beginTxn();
+                        self.encoder.singleline('OK');
                         break;
                     case 'commit':
                         self.txn.commit();
                         self.txn = null;
-                        encoder.singleline('OK');
+                        self.encoder.singleline('OK');
                         break;
                     case 'abort':
                         self.txn.abort();
                         self.txn = null;
-                        encoder.singleline('OK');
+                        self.encoder.singleline('OK');
                         break;
                     default:
                         self.emit('error','bad transaction command', command[1]);
-                        encoder.error('error, bad transaction command');
+                        self.encoder.error('error, bad transaction command');
                 }
                 break;
             case 'cs':          // custom command
             case 'cursor':      // for iterating the always ordered keys
                 if (!self.txn) {
                     self.emit('error', 'cursor open when txn is null');
-                    encoder.error('error, no active transaction');
+                    self.encoder.error('error, no active transaction');
                     return;
                 }
                 switch(command[1]) {
                     case 'open':
                     case 'init':
-                        self.cursor = new lmdb.Cursor(self.txn, dbi);
+                        self.cursor = new lmdb.Cursor(self.txn, self.dbi);
                         if (!self.cursor) {
                             self.emit('error','cannot get a cursor');
-                            encoder.error('error, cannot get a cursor');
+                            self.encoder.error('error, cannot get a cursor');
                             return;
                         }
-                        encoder.singleline('OK');
+                        self.encoder.singleline('OK');
                         break;
                     case 'close':
                     case 'delete':
                         self.cursor.close();
                         self.cursor = null;
-                        encoder.singleline('OK');
+                        self.encoder.singleline('OK');
                         break;
                     case 'first':
                         key = self.cursor.goToFirst();
                         if (key) {
-                            encoder.singleline('OK');
+                            self.encoder.singleline('OK');
                         } else {
-                            encoder.error('error, cannot go to first');
+                            self.encoder.error('error, cannot go to first');
                         }
                         break;
                     case 'next':
                         key = self.cursor.goToNext();
                         if (key) {
-                            encoder.singleline('OK');
+                            self.encoder.singleline('OK');
                         } else {
-                            encoder.error('error, cannot go to next');
+                            self.encoder.error('error, cannot go to next');
                         }
                         break;
                     case 'prev':
                         key = self.cursor.goToPrev();
                         if (key) {
-                            encoder.singleline('OK');
+                            self.encoder.singleline('OK');
                         } else {
-                            encoder.error('error, cannot go to prev');
+                            self.encoder.error('error, cannot go to prev');
                         }
                         break;
                     case 'gorange':
                         if (!command[2]) {
-                            encoder.error('error, range arg required');
+                            self.encoder.error('error, range arg required');
                         } else {
                             key = self.cursor.goToRange(command[2]);
                             if (key) {
-                                encoder.singleline('OK');
+                                self.encoder.singleline('OK');
                             } else {
-                                encoder.error('error, cannot go to range');
+                                self.encoder.error('error, cannot go to range');
                             }
                         }
                         break;
                     case 'gokey':
                         if (!command[2]) {
-                            encoder.error('error, key arg required');
+                            self.encoder.error('error, key arg required');
                         } else {
                             key = self.cursor.goToKey(command[2]);
                             if (key) {
-                                encoder.singleline('OK');
+                                self.encoder.singleline('OK');
                             } else {
-                                encoder.error('error, cannot go to that key');
+                                self.encoder.error('error, cannot go to that key');
                             }
                         }
                         break;
                     case 'getkey':
-                        encoder.encode(key = self.cursor.getCurrentString());
+                        self.encoder.encode(key = self.cursor.getCurrentString());
                         break;
                     // so the lmdb keys are always ordered in btree on disk
                     // making it easy to iterate like arrays. a good data
@@ -178,18 +147,18 @@ var BroDB = function(conf) {
                     case 'getAll':
                         var result = [];
                         for (var key = self.cursor.getCurrentString(); key; key = self.cursor.goToNext()) {
-                            result.push(self.txn.getString(dbi,key));
+                            result.push(self.txn.getString(self.dbi,key));
                         }
-                        encoder.encode(result);
+                        self.encoder.encode(result);
                         break;
                     default:
                         self.emit('error','bad cursor command', command[1]);
-                        encoder.error('error, bad cursor command');
+                        self.encoder.error('error, bad cursor command');
                         break;
                 }
                 break;
             default:
-                lmdbCmd(dbi, env, encoder, command[0],command.slice(1));
+                self.lmdbCmd(self.encoder, command[0],command.slice(1));
         }
     });
 
@@ -202,8 +171,60 @@ util.inherits(BroDB, EventEmitter);
 
 BroDB.prototype.close = function() {
     var self = this;
+    self.dbi.close();
+    self.env.close();
     self.server.close();
+    console.log("db", self.conf.name, "closed");
 };
+
+BroDB.prototype.set = function(key, val) {
+    var self = this;
+    txn = self.env.beginTxn();
+    txn.putString(self.dbi, key, val);
+    txn.commit();
+};
+
+BroDB.prototype.get = function( key) {
+    var self = this;
+    txn = self.env.beginTxn();
+    var res = txn.getString(self.dbi, key);
+    txn.commit();
+    return(res);
+};
+
+BroDB.prototype.del = function(key) {
+    var self = this;
+    txn = self.env.beginTxn();
+    txn.del(self.dbi, key);
+    txn.commit();
+};
+
+BroDB.prototype.lmdbCmd = function(encoder, cmd, args) {
+    var self = this;
+    var txn;
+    // strategy is to use 'string' for everything.
+    // that way JSON.stringify in/out of value for key
+    // and then use jsonpath or js to search & process
+    switch(cmd){
+        case 'set':
+            self.set(args[0], args[1]);
+            encoder.singleline('OK');
+            break;
+        case 'get':
+            var data = self.get(args[0]);
+            if (data)
+                encoder.encode(data);
+            else
+                encoder.error('not found');
+            break;
+        case 'del':
+            self.del(args[0]);
+            encoder.singleline('OK deleted');
+            break;
+        default:
+            encoder.error("error, bad command");
+    }
+}
 
 if (require.main == module) {
     // you can have multiple named dbs inside a db, like 'db1', 'db2',...
@@ -213,6 +234,7 @@ if (require.main == module) {
         port: !!argv.p ? argv.p : 2666,
         maxDbs: !!argv.n ? argv.n : 10,
         mapSize: !!argv.s ? argv.s : 16 * 1024 * 1024,
+        create: true,
         dupSort: true
     });
 
