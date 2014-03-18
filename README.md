@@ -49,14 +49,18 @@ Test using redis-cli:
     (error) not found
     redis 127.0.0.1:2666> 
 
-for more info read brodb.js
+or use client.js example to use node.js client api for redis:
+
+    node client.js 
+    Reply: OK
+    err null res lasdfadf
 
 
-to run a rest server:
+alternatively, to run a rest server:
 
     node app.js
 
-and use curl to post rest request:
+and use curl to post rest request and test:
 
     curl  -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{ "name": "db1", "path": "./dbdir", "port": 2666, "maxDbs" : 10, "mapSize" : 16777216, "dupSort": true, "create": true}' http://127.0.0.1:5000/initdb
 
