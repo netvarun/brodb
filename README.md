@@ -3,14 +3,6 @@ BrODB
 
 http://www.urbandictionary.com/define.php?term=brodb
 
-* a simple kvstore db even a brogrammer can use it
-* uses LMDB which is fast, reliable and does not amplify write operations like levelDB
-* can store data to disk persistently with transaction unlike redis
-* data can grow beyond given RAM unlike redis
-* uses existing hiredis based protocol to be compatible with redis-cli and api bindings
-* rest api -- see app.js
-* new commands can be added easily -- see brodb.js
-
 to run it as a server:
 
     node brodb.js
@@ -55,7 +47,7 @@ or use client.js example to use node.js client api for redis and extend it to us
     err null res lasdfadf
     key a
 
-alternatively, to run a rest server:
+alternatively, to run a http rest api server:
 
     node app.js
 
