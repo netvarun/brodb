@@ -3,6 +3,8 @@ BrODB
 
 http://www.urbandictionary.com/define.php?term=brodb
 
+A toy interface to LMDB
+
 to run it as a server:
 
     node brodb.js
