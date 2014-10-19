@@ -3,7 +3,7 @@ BrODB
 
 http://www.urbandictionary.com/define.php?term=brodb
 
-A toy interface to LMDB
+Toy to play around with LMDB
 
 to run it as a server:
 
